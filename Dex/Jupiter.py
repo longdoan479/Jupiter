@@ -8,6 +8,8 @@ import solders.transaction
 from solana.rpc.api import Client
 import requests
 from solana.rpc.types import TxOpts, TokenAccountOpts
+from solders.hash import Hash
+from solders.message import MessageV0, to_bytes_versioned
 
 from solders.pubkey import Pubkey
 
@@ -35,15 +37,13 @@ class Jupiter(ConnectSol):
 
             instruction = base64.b64decode(l_DataSwap)
 
-            transaction = Transaction.deserialize(instruction)
-            # l_VersionedTransaction = solders.transaction.VersionedTransaction.from_bytes(instruction)
-            # # Ký giao dịch bằng tài khoản của bạn
-            # signed_txn = pAccountFrom.GetkeyPairAccount().sign_message(message.to_bytes_versioned(l_VersionedTransaction.message))
-            # s_signed_txn = solders.transaction.VersionedTransaction.populate(
-            #     l_VersionedTransaction.message, [signed_txn]
-            # )
-            # # Ký và gửi giao dịch swap
-            txHash = self.mClient.send_transaction(transaction, pAccountFrom.GetkeyPairAccount(), opts=TxOpts(skip_preflight=True, max_retries=2))
+            # transaction = Transaction.deserialize(instruction)
+            raw_tx = solders.transaction.VersionedTransaction.from_bytes(base64.b64decode(l_DataSwap))
+
+            signature = pAccountFrom.GetkeyPairAccount().sign_message(to_bytes_versioned(raw_tx.message))
+            signed_tx = solders.transaction.VersionedTransaction.populate(raw_tx.message, [signature])
+
+            txHash = self.mClient.send_raw_transaction(bytes(signed_tx), opts=TxOpts(skip_preflight=True, max_retries=10))
             # print(str(txHash.value))
             lstSig = [txHash.value]
             confirmed = False
@@ -86,9 +86,9 @@ class Jupiter(ConnectSol):
         l_Data = json.dumps({
             "quoteResponse": l_quote,
             "userPublicKey": str(pAccountSol.GetPublicKey()),
-            'prioritizationFeeLamports': {"priorityLevelWithMaxLamports": {"priorityLevel": "medium", "maxLamports": 1000000}},
+            'prioritizationFeeLamports': {"priorityLevelWithMaxLamports": {"priorityLevel": "high", "maxLamports": 500000}},
             'dynamicComputeUnitLimit': True,
-            'asLegacyTransaction': True
+            'asLegacyTransaction': False
         })
 
         l_headers = {
@@ -103,25 +103,25 @@ class Jupiter(ConnectSol):
         l_DecimalToken = gDictTokenDecimal[pInputMint]['Decimal']
         pAmountLamport = pAmountOriginal * 10**l_DecimalToken
 
-        # l_AutoSlipPage = 10
-        # if pOutputMint not in list(TokenContract.getListToken()):
-        #     l_AutoSlipPage = 60
         l_ProxyAddress = Cons.g_Data_Proxy[1] if pAccountSol.mGroup not in Cons.g_Data_Proxy else Cons.g_Data_Proxy[pAccountSol.mGroup]
         http_proxy = {
             "http": l_ProxyAddress,
             "https": l_ProxyAddress
         }
-
-        url = f"https://quote-api.jup.ag/v6/quote?" \
-              f"inputMint={pInputMint}" \
-              f"&outputMint={pOutputMint}" \
-              f"&amount={int(pAmountLamport)}" \
-              f"&autoSlippage=true" \
-              f"&swapMode=ExactIn" \
-              f"&onlyDirectRoutes=false" \
-              f"&asLegacyTransaction=true" \
-              f"&slippageBps=60" \
-              f"&experimentalDexes=Jupiter LO"
-        response = requests.get(url, proxies=http_proxy)
-        return response.json()
+        while 1:
+            url = f"https://quote-api.jup.ag/v6/quote?" \
+                  f"inputMint={pInputMint}" \
+                  f"&outputMint={pOutputMint}" \
+                  f"&amount={int(pAmountLamport)}" \
+                  f"&autoSlippage=true" \
+                  f"&swapMode=ExactIn" \
+                  f"&onlyDirectRoutes=false" \
+                  f"&autoSlippageCollisionUsdValue=1000" \
+                  f"&minimizeSlippage=false" \
+                  f"&asLegacyTransaction=false" \
+                  f"&maxAccounts=64" \
+                  f"&maxAutoSlippageBps=15"
+            response = requests.get(url, proxies=http_proxy).json()
+            if int(response["slippageBps"]) <= 15:
+                return response
 

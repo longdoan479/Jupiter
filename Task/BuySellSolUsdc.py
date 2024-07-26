@@ -7,7 +7,7 @@ from solana.rpc.api import Client
 from solders.pubkey import Pubkey
 
 from Include.AccountSol import AccountSol
-from Include.Constant import g_RPC_SOL, TokenContract, strLoggingPath
+from Include.Constant import g_RPC_SOL, TokenContract, strLoggingPath, gRandomTimeMax, gRandomTimeMin
 from Dex.Jupiter import Jupiter
 from Include.Logging import Logging
 from Include.Token import Token
@@ -36,7 +36,7 @@ class BuySellSolUsdc:
         l_TextToLog = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Swap SOL to USDC on Jupiter \n => {l_SolToUSDC}'
         Logging.WriteLog(l_FilePath, l_TextToLog)
 
-        l_Timesleep = random.randint(120, 1200)
+        l_Timesleep = random.randint(gRandomTimeMin, gRandomTimeMax)
         l_TextToLog = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Time sleep {l_Timesleep} seconds after Swap SOL to USDC on Jupiter'
         Logging.WriteLog(l_FilePath, l_TextToLog)
         time.sleep(l_Timesleep)
@@ -67,7 +67,7 @@ class BuySellSolUsdc:
         # init rate 20%
         # the more self.TotalDecision, the less rate
         if l_RandomNumber < (20/self.TotalDecision):
-            l_Timesleep = random.randint(120, 1300)
+            l_Timesleep = random.randint(gRandomTimeMin, gRandomTimeMax)
 
             # ================ logging ====================
             l_FilePath = os.getcwd() + strLoggingPath.format(self.mAccountSOL.mGroup, str(self.mAccountSOL.GetPublicKey()))
@@ -76,7 +76,7 @@ class BuySellSolUsdc:
             time.sleep(l_Timesleep)
 
             # ================== swap meme =======================
-            l_BuyRandomToken = BuyRandomToken(self.mAccountSOL, round(pAmountToSwap / random.randint(1000, 5000), 7))
+            l_BuyRandomToken = BuyRandomToken(self.mAccountSOL, round(pAmountToSwap / random.randint(5000, 10000), 8))
             l_BuyRandomToken.DoTask(pInputMint)
             self.TotalDecision = self.TotalDecision + 1
 

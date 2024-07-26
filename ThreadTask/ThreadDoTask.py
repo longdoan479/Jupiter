@@ -5,6 +5,7 @@ from solana.rpc.api import Client
 from Include.AccountSol import AccountSol
 from Include.Constant import g_RPC_SOL
 from Include.Data import DataWallet
+from Task.BuySellLstToken import BuySellLstToken
 from Task.BuySellSolUsdc import BuySellSolUsdc
 
 
@@ -19,5 +20,8 @@ class ThreadDoTask(threading.Thread):
             l_sol_web3 = Client(g_RPC_SOL)
             lAccSol = AccountSol(l_Account.mPrivateKey, l_sol_web3, l_Account.mGroup)
 
-            l_Task = BuySellSolUsdc(lAccSol, round(lAccSol.GetBalanceSOL(True)/1.15, 3))
+            l_Task = BuySellSolUsdc(lAccSol, round(lAccSol.GetBalanceSOL(True)/1.05, 3))
             l_Task.DoTask()
+
+            # l_Task = BuySellLstToken(lAccSol, round(lAccSol.GetBalanceSOL(True) / 1.15, 3))
+            # l_Task.DoTask()
