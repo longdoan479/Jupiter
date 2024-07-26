@@ -60,7 +60,6 @@ class Jupiter(ConnectSol):
                     l_Count = l_Count + 1
                     if l_Count >= 24:
                         l_FilePath = os.getcwd() + Cons.strLoggingPath.format(pAccountFrom.mGroup, str(pAccountFrom.GetPublicKey()))
-                        print(l_FilePath)
                         l_TextToLog = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Resend Txn'
                         Logging.WriteLog(l_FilePath, l_TextToLog)
                         print("Resend txhash 1")
