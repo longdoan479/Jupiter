@@ -95,8 +95,18 @@ class Jupiter(ConnectSol):
             'Accept': 'application/json',
         }
 
-        l_response = requests.post(l_URL, data=l_Data, headers=l_headers, proxies=http_proxy).json()
-        return l_response["swapTransaction"]
+        while 1:
+            try:
+                l_response = requests.post(l_URL, data=l_Data, headers=l_headers, proxies=http_proxy)
+                if l_response.status_code == 200:
+                    l_result = l_response.json()
+                    return l_result["swapTransaction"]
+            except Exception as e:
+                l_FilePath = os.getcwd() + Cons.strLoggingPath.format(pAccountSol.mGroup,
+                                                                      str(pAccountSol.GetPublicKey()))
+                l_TextToLog = f'\n\n{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: {str(e)}\n\n'
+                Logging.WriteLog(l_FilePath, l_TextToLog)
+                time.sleep(5)
 
     def GetDataQuote(self, pInputMint: str, pOutputMint: str, pAmountOriginal: float, pAccountSol: AccountSol):
         l_DecimalToken = gDictTokenDecimal[pInputMint]['Decimal']
@@ -107,6 +117,7 @@ class Jupiter(ConnectSol):
             "http": l_ProxyAddress,
             "https": l_ProxyAddress
         }
+
         while 1:
             url = f"https://quote-api.jup.ag/v6/quote?" \
                   f"inputMint={pInputMint}" \
@@ -120,7 +131,39 @@ class Jupiter(ConnectSol):
                   f"&asLegacyTransaction=false" \
                   f"&maxAccounts=64" \
                   f"&maxAutoSlippageBps=15"
-            response = requests.get(url, proxies=http_proxy).json()
-            if int(response["slippageBps"]) <= 15:
-                return response
+            try:
+                response = requests.get(url, proxies=http_proxy)
+                if response.status_code == 200:
+                    result = response.json()
+                    if int(result["slippageBps"]) <= 15:
+                        return result
+            except Exception as e:
+                l_FilePath = os.getcwd() + Cons.strLoggingPath.format(pAccountSol.mGroup,
+                                                                      str(pAccountSol.GetPublicKey()))
+                l_TextToLog = f'\n\n{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: {str(e)}\n\n'
+                Logging.WriteLog(l_FilePath, l_TextToLog)
+                time.sleep(5)
 
+    @staticmethod
+    def GetTokenPriceInUSD(pInputMint: str, pAccountSol: AccountSol) -> float:
+        l_RequestURL = Cons.strPriceJupAPI.format(pInputMint)
+
+        l_ProxyAddress = Cons.g_Data_Proxy[1] if pAccountSol.mGroup not in Cons.g_Data_Proxy else Cons.g_Data_Proxy[pAccountSol.mGroup]
+
+        http_proxy = {
+            "http": l_ProxyAddress,
+            "https": l_ProxyAddress
+        }
+
+        while 1:
+            try:
+                response = requests.get(l_RequestURL, proxies=http_proxy)
+                if response.status_code == 200:
+                    result = response.json()
+                    return result["data"][pInputMint]["price"]
+            except Exception as e:
+                l_FilePath = os.getcwd() + Cons.strLoggingPath.format(pAccountSol.mGroup,
+                                                                      str(pAccountSol.GetPublicKey()))
+                l_TextToLog = f'\n\n{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: {str(e)}\n\n'
+                Logging.WriteLog(l_FilePath, l_TextToLog)
+                time.sleep(5)

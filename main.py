@@ -1,16 +1,13 @@
 import os
 import random
 
-from solana.rpc.api import Client
 
-from Include.AccountSol import AccountSol
 from Include.FileProcessing import FileProcessing
-from Task.BuySellSolUsdc import BuySellSolUsdc
 import Include.Constant as Cons
+from ThreadTask.ThreadDoTask import ThreadDoTask
 
 
 # # ------------------ Run multi acc ----------------------
-from ThreadTask.ThreadDoTask import ThreadDoTask
 
 l_FileKey = FileProcessing("key.xlsx")
 l_lstAccount = l_FileKey.ReadDataWallet()
@@ -18,25 +15,24 @@ l_lstAccount = l_FileKey.ReadDataWallet()
 l_FileProxy = FileProcessing("proxy.xlsx")
 Cons.g_Data_Proxy = l_FileProxy.ReadDataProxyJSON()
 
+
 l_MaxGroup = max(l_lstAccount, key=lambda obj: obj.mGroup).mGroup
 
 l_lstAccountRandom = []
-for i in range(1, l_MaxGroup+1):
-    l_lstAccountFilter = list(filter(lambda acc: acc.mGroup == i, l_lstAccount))
-    for j in range(0, Cons.g_Account_Number_Each_Group):
-        l_RandomIndexAccount = random.randint(0, int(len(l_lstAccountFilter) - 1))
-        if l_lstAccountFilter[l_RandomIndexAccount] not in l_lstAccountRandom:
-            l_FilePath = os.getcwd() + Cons.strLoggingPath.format(l_lstAccountFilter[l_RandomIndexAccount].mGroup, l_lstAccountFilter[l_RandomIndexAccount].mAddress)
-            if os.path.exists(l_FilePath) is False:
-                l_lstAccountRandom.append(l_lstAccountFilter[l_RandomIndexAccount])
-
 groups_Account = {}
-# Nhóm dữ liệu theo giá trị group
-for acc in l_lstAccountRandom:
-    group = acc.mGroup
+
+for i in range(1, l_MaxGroup+1):
+    group = i
+
+    l_lstAccountFilter = list(filter(lambda acc: acc.mGroup == group, l_lstAccount))
+
+    # Nhóm dữ liệu theo giá trị group
     if group not in groups_Account:
         groups_Account[group] = []
-    groups_Account[group].append(acc)
+
+    random.shuffle(l_lstAccountFilter)
+    groups_Account[group].extend(l_lstAccountFilter)
+
 
 # Chia các nhóm thành 5 mảng
 l_Results = [[] for _ in range(5)]
