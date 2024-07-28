@@ -49,6 +49,9 @@ class Jupiter(ConnectSol):
             confirmed = False
             l_Count = 0
             while not confirmed:
+                l_FilePath = os.getcwd() + Cons.strLoggingPath.format(pAccountFrom.mGroup,
+                                                                      str(pAccountFrom.GetPublicKey()))
+
                 try:
                     l_GetSignatureStatus = self.mClient.get_signature_statuses(lstSig).value[0]
                     if l_GetSignatureStatus is not None:
@@ -59,13 +62,13 @@ class Jupiter(ConnectSol):
                             break
                     l_Count = l_Count + 1
                     if l_Count >= 24:
-                        l_FilePath = os.getcwd() + Cons.strLoggingPath.format(pAccountFrom.mGroup, str(pAccountFrom.GetPublicKey()))
                         l_TextToLog = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Resend Txn'
                         Logging.WriteLog(l_FilePath, l_TextToLog)
                         print("Resend txhash 1")
                         break
-                except:
-                    pass
+                except Exception as e:
+                    l_TextToLog = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Exception: {str(e)}'
+                    Logging.WriteLog(l_FilePath, l_TextToLog)
                 time.sleep(5)  # Chờ 5 giây trước khi kiểm tra lại
             if isinstance(signature_statuses, type(None)) and l_GetSignatureStatus is not None:
                 break
@@ -94,19 +97,22 @@ class Jupiter(ConnectSol):
             'Content-Type': 'application/json',
             'Accept': 'application/json',
         }
-
+        l_FilePath = os.getcwd() + Cons.strLoggingPath.format(pAccountSol.mGroup,
+                                                              str(pAccountSol.GetPublicKey()))
         while 1:
             try:
                 l_response = requests.post(l_URL, data=l_Data, headers=l_headers, proxies=http_proxy)
                 if l_response.status_code == 200:
                     l_result = l_response.json()
                     return l_result["swapTransaction"]
+                else:
+                    l_TextToLog = f'\n\n{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: response.status_code: {str(l_response.status_code)}\n\n'
+                    Logging.WriteLog(l_FilePath, l_TextToLog)
+
             except Exception as e:
-                l_FilePath = os.getcwd() + Cons.strLoggingPath.format(pAccountSol.mGroup,
-                                                                      str(pAccountSol.GetPublicKey()))
                 l_TextToLog = f'\n\n{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: {str(e)}\n\n'
                 Logging.WriteLog(l_FilePath, l_TextToLog)
-                time.sleep(5)
+            time.sleep(60)
 
     def GetDataQuote(self, pInputMint: str, pOutputMint: str, pAmountOriginal: float, pAccountSol: AccountSol):
         l_DecimalToken = gDictTokenDecimal[pInputMint]['Decimal']
@@ -117,7 +123,8 @@ class Jupiter(ConnectSol):
             "http": l_ProxyAddress,
             "https": l_ProxyAddress
         }
-
+        l_FilePath = os.getcwd() + Cons.strLoggingPath.format(pAccountSol.mGroup,
+                                                              str(pAccountSol.GetPublicKey()))
         while 1:
             url = f"https://quote-api.jup.ag/v6/quote?" \
                   f"inputMint={pInputMint}" \
@@ -137,12 +144,17 @@ class Jupiter(ConnectSol):
                     result = response.json()
                     if int(result["slippageBps"]) <= 15:
                         return result
+                    else:
+                        l_TextToLog = f'\n\n{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: result["slippageBps"]: {str(result["slippageBps"])}\n\n'
+                        Logging.WriteLog(l_FilePath, l_TextToLog)
+                else:
+                    l_TextToLog = f'\n\n{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: response.status_code: {str(response.status_code)}\n\n'
+                    Logging.WriteLog(l_FilePath, l_TextToLog)
+
             except Exception as e:
-                l_FilePath = os.getcwd() + Cons.strLoggingPath.format(pAccountSol.mGroup,
-                                                                      str(pAccountSol.GetPublicKey()))
                 l_TextToLog = f'\n\n{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: {str(e)}\n\n'
                 Logging.WriteLog(l_FilePath, l_TextToLog)
-                time.sleep(5)
+            time.sleep(60)
 
     @staticmethod
     def GetTokenPriceInUSD(pInputMint: str, pAccountSol: AccountSol) -> float:
@@ -154,16 +166,19 @@ class Jupiter(ConnectSol):
             "http": l_ProxyAddress,
             "https": l_ProxyAddress
         }
-
+        l_FilePath = os.getcwd() + Cons.strLoggingPath.format(pAccountSol.mGroup,
+                                                              str(pAccountSol.GetPublicKey()))
         while 1:
             try:
                 response = requests.get(l_RequestURL, proxies=http_proxy)
                 if response.status_code == 200:
                     result = response.json()
                     return result["data"][pInputMint]["price"]
+                else:
+                    l_TextToLog = f'\n\n{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: response.status_code: {str(response.status_code)}\n\n'
+                    Logging.WriteLog(l_FilePath, l_TextToLog)
+
             except Exception as e:
-                l_FilePath = os.getcwd() + Cons.strLoggingPath.format(pAccountSol.mGroup,
-                                                                      str(pAccountSol.GetPublicKey()))
                 l_TextToLog = f'\n\n{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: {str(e)}\n\n'
                 Logging.WriteLog(l_FilePath, l_TextToLog)
-                time.sleep(5)
+            time.sleep(60)
