@@ -42,8 +42,11 @@ class BuySellLstTokenWithPath:
         l_LST_Balance = l_LstToken.getBalanceTokenByOwner(self.mAccountSOL.GetPublicKey())
         if l_LST_Balance > 0:
             for i in range(1, len(l_ListTokenLSTRandom)):
+                l_Timesleep = random.randint(gRandomTimeMin, gRandomTimeMax)
+
                 l_SwapLST = l_Jupiter.swap(l_ListTokenLSTRandom[i-1], l_ListTokenLSTRandom[i], l_LST_Balance, self.mAccountSOL)
                 l_TotalVolumne += Jupiter.GetTokenPriceInUSD(l_ListTokenLSTRandom[i-1], self.mAccountSOL) * l_LST_Balance
+                time.sleep(l_Timesleep)
 
                 l_LstToken = Token(l_Client, Pubkey.from_string(l_ListTokenLSTRandom[i]))
                 l_LST_Balance = l_LstToken.getBalanceTokenByOwner(self.mAccountSOL.GetPublicKey())
@@ -54,7 +57,6 @@ class BuySellLstTokenWithPath:
                 Logging.WriteLog(l_FilePath, l_TextToLog)
                 # ------------------------------------------
 
-                l_Timesleep = random.randint(gRandomTimeMin, gRandomTimeMax)
                 time.sleep(l_Timesleep)
 
             l_LstToSol = l_Jupiter.swap(l_ListTokenLSTRandom[len(l_ListTokenLSTRandom)-1], TokenContract.SOL, l_LST_Balance, self.mAccountSOL)
