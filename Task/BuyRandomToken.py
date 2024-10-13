@@ -6,8 +6,8 @@ from solana.rpc.api import Client
 
 from Dex.Jupiter import Jupiter
 from Include.AccountSol import AccountSol
-from Include.Constant import TokenAltContract, g_RPC_SOL, TokenContract, strLoggingPath
-from Include.Logging import Logging
+from Constant import TokenAltContract, g_RPC_SOL, TokenContract, strLoggingPath
+from Logging import Logging
 
 
 class BuyRandomToken:
