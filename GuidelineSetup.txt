@@ -1,0 +1,3 @@
+start screen -S <name>
+export PYTHONPATH="/root/SOL/BaseLibrary/"
+python3 main.py

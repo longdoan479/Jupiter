@@ -33,7 +33,7 @@ class BuySellLstToken:
         l_SolToLST = l_Jupiter.swap(TokenContract.SOL, l_TokenLSTRandom, self.mAmountIn, self.mAccountSOL)
 
         # --------------- Logging ---------------------------
-        l_FilePath = os.getcwd() + strLoggingPath.format(self.mAccountSOL.mGroup, str(self.mAccountSOL.GetPublicKey()))
+        l_FilePath = os.getcwd() + strLoggingPath.format(str(self.mAccountSOL.GetPublicKey()))
         l_TextToLog = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Swap SOL to TokenLST on Jupiter \n => {l_SolToLST}'
         Logging.WriteLog(l_FilePath, l_TextToLog)
 
@@ -69,7 +69,7 @@ class BuySellLstToken:
             l_Timesleep = random.randint(gRandomTimeMin, gRandomTimeMax)
 
             # ================ logging ====================
-            l_FilePath = os.getcwd() + strLoggingPath.format(self.mAccountSOL.mGroup, str(self.mAccountSOL.GetPublicKey()))
+            l_FilePath = os.getcwd() + strLoggingPath.format(str(self.mAccountSOL.GetPublicKey()))
             l_TextToLog = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Time sleep {l_Timesleep} seconds, ready for Swap MEME coin on Jupiter'
             Logging.WriteLog(l_FilePath, l_TextToLog)
             time.sleep(l_Timesleep)

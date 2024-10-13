@@ -5,6 +5,7 @@ import threading
 import time
 from typing import List
 from solana.rpc.api import Client
+from solana.rpc.async_api import AsyncClient
 
 from Include.AccountSol import AccountSol
 from Include.Constant import g_RPC_SOL, gRandomTimeMax, gRandomTimeMin, strLoggingPath, gTotalVolEachAccount
@@ -27,7 +28,7 @@ class ThreadDoTask(threading.Thread):
             for l_Account in self.mListAccount:
                 l_sol_web3 = Client(g_RPC_SOL)
                 lAccSol = AccountSol(l_Account.mPrivateKey, l_sol_web3, l_Account.mGroup)
-
+                l_BalanceSol = lAccSol.GetBalanceSOL(True)
                 if str(lAccSol.GetPublicKey()) not in self.mDictAccVol:
                     self.mDictAccVol[str(lAccSol.GetPublicKey())] = 0
                 else:
@@ -37,7 +38,7 @@ class ThreadDoTask(threading.Thread):
 
                 print(f"\n{self.mThreadName}: Account {l_Account.mAddress} is running")
 
-                l_Task = BuySellLstTokenWithPath(lAccSol, round(lAccSol.GetBalanceSOL(True)/1.05, 3))
+                l_Task = BuySellLstTokenWithPath(lAccSol, round(l_BalanceSol/1.05, 3))
                 l_TotalVolumn = l_Task.DoTask()
 
                 self.mDictAccVol[str(lAccSol.GetPublicKey())] += l_TotalVolumn
@@ -45,7 +46,7 @@ class ThreadDoTask(threading.Thread):
                     l_NumOfAccReachTarget += 1
 
                 # ================== Logging =========================
-                l_FilePath = os.getcwd() + strLoggingPath.format(lAccSol.mGroup, str(lAccSol.GetPublicKey()))
+                l_FilePath = os.getcwd() + strLoggingPath.format(str(lAccSol.GetPublicKey()))
                 l_TextToLog = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: ' \
                               f'Total Volumn account {lAccSol.GetPublicKey()}: ' \
                               f'{self.mDictAccVol[str(lAccSol.GetPublicKey())]} usd'

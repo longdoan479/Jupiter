@@ -28,7 +28,7 @@ class BuyRandomToken:
             l_Swap = l_Jupiter.swap(TokenContract.SOL, l_TokenRandom, self.mAmountIn, self.mAccountSOL)
 
         # --------------- Logging ---------------------------
-        l_FilePath = os.getcwd() + strLoggingPath.format(self.mAccountSOL.mGroup, str(self.mAccountSOL.GetPublicKey()))
+        l_FilePath = os.getcwd() + strLoggingPath.format(str(self.mAccountSOL.GetPublicKey()))
         l_TextToLog = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Swap Altcoin on Jupiter \n => {l_Swap}'
         Logging.WriteLog(l_FilePath, l_TextToLog)
 

@@ -35,30 +35,23 @@ for i in range(1, l_MaxGroup+1):
 
 
 # Chia các nhóm thành 5 mảng
-l_Results = [[] for _ in range(5)]
+l_Results = [[] for _ in range(25)]
 group_list = list(groups_Account.values())
 
 for i, group in enumerate(group_list):
-    l_Results[i % 5].extend(group)
+    l_Results[i % 25].extend(group)
 
-print()
+# Danh sách các luồng
+threads = []
 
-thread1 = ThreadDoTask("Thread 1", l_Results[0])
-thread2 = ThreadDoTask("Thread 2", l_Results[1])
-thread3 = ThreadDoTask("Thread 3", l_Results[2])
-thread4 = ThreadDoTask("Thread 4", l_Results[3])
-thread5 = ThreadDoTask("Thread 5", l_Results[4])
+# Tạo và khởi động 20 luồng
+for i in range(0, 25):
+    # thread = threading.Thread(target=task, args=(i,))
+    thread = ThreadDoTask(f"Thread {i+1}", l_Results[i])
+    threads.append(thread)
+    thread.start()
 
-thread1.start()
-thread2.start()
-thread3.start()
-thread4.start()
-thread5.start()
-
-
-thread1.join()
-thread2.join()
-thread3.join()
-thread4.join()
-thread5.join()
+# Đảm bảo tất cả các luồng hoàn thành
+for thread in threads:
+    thread.join()
 
