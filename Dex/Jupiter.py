@@ -15,6 +15,7 @@ from solders.message import to_bytes_versioned
 from IncludeAsync.AccountSol import AccountSol
 from IncludeAsync.ConnectSol import ConnectSol
 from Constant import gDictTokenDecimal, g_ProxyAddress, strLoggingPath, strPriceJupAPI
+from IncludeAsync.Transaction import Transactions
 
 from Logging import Logging
 
@@ -24,61 +25,29 @@ class Jupiter(ConnectSol):
         super().__init__(pClient)
 
     async def swap(self, pInputMint: str, pOutputMint: str, pAmountOriginal: float, pAccountFrom: AccountSol):
-
-        signature_statuses = None
         txHash = None
-        l_GetSignatureStatus = None
-        l_Retry = 0
-        while l_Retry < 2:
-            try:
-                l_DataSwap = await self.GetDataSwap(pInputMint, pOutputMint, pAmountOriginal, pAccountFrom)
+        l_result = False
+        try:
+            l_DataSwap = await self.GetDataSwap(pInputMint, pOutputMint, pAmountOriginal, pAccountFrom)
 
-                # transaction = Transaction.deserialize(instruction)
-                raw_tx = solders.transaction.VersionedTransaction.from_bytes(base64.b64decode(l_DataSwap["swapTransaction"]))
+            raw_tx = solders.transaction.VersionedTransaction.from_bytes(base64.b64decode(l_DataSwap["swapTransaction"]))
 
-                signature = pAccountFrom.GetkeyPairAccount().sign_message(to_bytes_versioned(raw_tx.message))
-                signed_tx = solders.transaction.VersionedTransaction.populate(raw_tx.message, [signature])
-                txHash = await self.mClient.send_raw_transaction(bytes(signed_tx), opts=TxOpts(skip_preflight=True, max_retries=10))
-                # print(str(txHash.value))
-                lstSig = [txHash.value]
+            signature = pAccountFrom.GetkeyPairAccount().sign_message(to_bytes_versioned(raw_tx.message))
+            signed_tx = solders.transaction.VersionedTransaction.populate(raw_tx.message, [signature])
+            txHash = await self.mClient.send_raw_transaction(bytes(signed_tx), opts=TxOpts(skip_preflight=True, max_retries=10))
+            lstSig = [txHash.value]
 
-                await asyncio.sleep(10)
+            await asyncio.sleep(30)
 
-                confirmed = False
-                l_Count = 0
-                while not confirmed:
-                    l_FilePath = os.getcwd() + strLoggingPath.format(str(pAccountFrom.GetPublicKey()))
+            l_Transaction = Transactions(self.mClient)
+            l_result = await l_Transaction.WaitForTransaction(lstSig, 600, 10)
 
-                    try:
-                        l_GetSignatureStatus = (await self.mClient.get_signature_statuses(lstSig))
-                        if l_GetSignatureStatus.value[0] is not None:
-                            signature_confirm_statuses = l_GetSignatureStatus.value[0].confirmation_status
-                            signature_statuses = l_GetSignatureStatus.value[0].status
-                            if signature_confirm_statuses == solders.transaction_status.TransactionConfirmationStatus.Finalized:
-                                confirmed = True
-                                break
-                        l_Count = l_Count + 1
-                        if l_Count >= 24:
-                            l_TextToLog = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Resend Txn'
-                            Logging.WriteLog(l_FilePath, l_TextToLog)
-                            print("Resend txhash 1")
-                            break
-                    except Exception as e:
-                        l_TextToLog = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Exception Swap Function: {type(e).__name__} - {e}'
-                        Logging.WriteLog(l_FilePath, l_TextToLog)
-                    await asyncio.sleep(5) # Chờ 5 giây trước khi kiểm tra lại
+        except Exception as e:
+            l_FilePath = os.getcwd() + strLoggingPath.format(str(pAccountFrom.GetPublicKey()))
+            l_TextToLog = f'\n\n{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Exception Swap Function: {type(e).__name__} - {e}\n\n'
+            Logging.WriteLog(l_FilePath, l_TextToLog)
 
-                if isinstance(signature_statuses, type(None)) and l_GetSignatureStatus.value[0] is not None:
-                    break
-                elif l_Count >= 24:
-                    l_Retry += 1
-            except Exception as e:
-                l_FilePath = os.getcwd() + strLoggingPath.format(str(pAccountFrom.GetPublicKey()))
-                l_TextToLog = f'\n\n{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Exception Swap Function: {type(e).__name__} - {e}\n\n'
-                Logging.WriteLog(l_FilePath, l_TextToLog)
-            await asyncio.sleep(60)
-
-        return str(txHash.value)
+        return str(txHash.value), l_result
 
     async def GetDataSwap(self, pInputMint: str, pOutputMint: str, pAmountOriginal: float, pAccountSol: AccountSol):
 
@@ -93,7 +62,7 @@ class Jupiter(ConnectSol):
                 l_Data = json.dumps({
                     "quoteResponse": l_quote,
                     "userPublicKey": str(pAccountSol.GetPublicKey()),
-                    'prioritizationFeeLamports': {"priorityLevelWithMaxLamports": {"priorityLevel": "veryHigh", "maxLamports": 1000000, "global": False}},
+                    'prioritizationFeeLamports': {"priorityLevelWithMaxLamports": {"priorityLevel": "high", "maxLamports": 1000000, "global": False}},
                     'dynamicComputeUnitLimit': True,
                     'asLegacyTransaction': False,
                     'allowOptimizedWrappedSolTokenAccount': True,

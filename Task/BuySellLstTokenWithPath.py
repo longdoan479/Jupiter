@@ -41,50 +41,29 @@ class BuySellLstTokenWithPath(ConnectSol):
         l_CurrentToken = l_StartToken
         l_NextToken = l_ListTokenLSTRandom[0]
         if l_Balance > 0:
-            for i in range(0, len(l_ListTokenLSTRandom)):
-                l_Timesleep = random.randint(gRandomTimeMin, gRandomTimeMax)
+            l_Timesleep = random.randint(gRandomTimeMin, gRandomTimeMax)
 
-                if i == 0:
-                    l_SwapLST = await l_Jupiter.swap(l_CurrentToken, l_NextToken, round(l_Balance/1.05, 3), self.mAccountSOL)
-                    l_TotalVolumne += await Jupiter.GetTokenPriceInUSD(l_CurrentToken, self.mAccountSOL) * l_Balance
-                elif i == len(l_ListTokenLSTRandom)-1:
-                    break
-                else:
-                    l_CurrentToken = l_ListTokenLSTRandom[i-1]
-                    l_NextToken = l_ListTokenLSTRandom[i]
+            if l_CurrentToken == TokenContract.SOL:
+                l_SwapLST, l_result = await l_Jupiter.swap(l_CurrentToken, l_NextToken, round(l_Balance/1.05, 3), self.mAccountSOL)
+            else:
+                l_SwapLST, l_result = await l_Jupiter.swap(l_CurrentToken, l_NextToken, l_Balance, self.mAccountSOL)
 
-                    l_SwapLST = await l_Jupiter.swap(l_CurrentToken, l_NextToken, l_Balance, self.mAccountSOL)
-                    l_TotalVolumne += await Jupiter.GetTokenPriceInUSD(l_CurrentToken, self.mAccountSOL) * l_Balance
+            await asyncio.sleep(l_Timesleep)
 
-                await asyncio.sleep(l_Timesleep)
+            if l_result is True:
+                # --------------- Logging ---------------------------
+                l_TotalVolumne += await Jupiter.GetTokenPriceInUSD(l_CurrentToken, self.mAccountSOL) * l_Balance
 
-                if l_NextToken == TokenContract.SOL:
-                    l_Balance = await self.mAccountSOL.GetBalanceSOL(True)
-                else:
-                    l_LstToken = Token(self.mClient, Pubkey.from_string(l_NextToken))
-                    l_Balance = await l_LstToken.getBalanceTokenByOwner(self.mAccountSOL.GetPublicKey())
-
-                if l_Balance > 0 and l_NextToken != TokenContract.SOL:
-                    # --------------- Logging ---------------------------
-                    l_FilePath = os.getcwd() + strLoggingPath.format(str(self.mAccountSOL.GetPublicKey()))
-                    l_TextToLog = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Swap TokenLST to TokenLST on Jupiter \n => {l_SwapLST}'
-                    Logging.WriteLog(l_FilePath, l_TextToLog)
-                    # ------------------------------------------
-
-                elif l_Balance > 0.01 and l_NextToken == TokenContract.SOL:
-                    # --------------- Logging ---------------------------
-                    l_FilePath = os.getcwd() + strLoggingPath.format(str(self.mAccountSOL.GetPublicKey()))
-                    l_TextToLog = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Swap TokenLST to TokenLST on Jupiter \n => {l_SwapLST}'
-                    Logging.WriteLog(l_FilePath, l_TextToLog)
-                else:
-                    # --------------- Logging ---------------------------
-                    l_FilePath = os.getcwd() + strLoggingPath.format(str(self.mAccountSOL.GetPublicKey()))
-                    l_TextToLog = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Not found balance after swap with txn: \n => {l_SwapLST}'
-                    Logging.WriteLog(l_FilePath, l_TextToLog)
-                    # ------------------------------------------
-                    break
-
-                await asyncio.sleep(l_Timesleep)
+                l_FilePath = os.getcwd() + strLoggingPath.format(str(self.mAccountSOL.GetPublicKey()))
+                l_TextToLog = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Swap TokenLST to TokenLST on Jupiter \n => {l_SwapLST}'
+                Logging.WriteLog(l_FilePath, l_TextToLog)
+                # ------------------------------------------
+            else:
+                # --------------- Logging ---------------------------
+                l_FilePath = os.getcwd() + strLoggingPath.format(str(self.mAccountSOL.GetPublicKey()))
+                l_TextToLog = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Swap TokenLST to TokenLST on Jupiter Failed'
+                Logging.WriteLog(l_FilePath, l_TextToLog)
+            await asyncio.sleep(l_Timesleep)
 
         return l_TotalVolumne
 
