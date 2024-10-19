@@ -1,27 +1,28 @@
-import os
-import random
+import asyncio
 import time
 
-import qrcode
-import requests
+import aiohttp
 from solana.rpc.api import Client
 
 # Chuỗi ký tự cần tạo QR code
 from Include.AccountSol import AccountSol
-from Include.Constant import g_RPC_SOL, strLoggingPath
-from Include.FileProcessing import FileProcessing
+from Constant import g_RPC_SOL, strPriceJupAPI, g_ProxyAddress
+from FileProcessing import FileProcessing
 
-l_FileKey = FileProcessing("key.xlsx")
-l_lstAccount = l_FileKey.ReadDataWallet()
+async def main():
 
-l_clietn = Client(g_RPC_SOL)
-for i in range(0, len(l_lstAccount)):
-    acc = AccountSol(l_lstAccount[i].mPrivateKey, l_clietn)
-    time.sleep(0.25)
-    # transactions = l_clietn.get_signatures_for_address(acc.GetPublicKey(), limit=1000).value
-
-    # print(f"{i}. {str(acc.GetPublicKey())}: {acc.GetBalanceSOL(True)}, total txn: {len(transactions)}")
-    l_bal = acc.GetBalanceSOL(True)
-    if l_bal < 0.1:
-        print(f"{i}. {str(acc.GetPublicKey())}: {l_bal}")
-
+    for i in range(0, 100):
+        pInputMint = "LSTxxxnJzKDFSLr4dUkPcmCf5VyryEqzPLz5j4bpxFp"
+        l_RequestURL = strPriceJupAPI.format(pInputMint)
+        l_headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Mobile Safari/537.36'
+        }
+        async with aiohttp.ClientSession() as session:
+            async with session.get(l_RequestURL, proxy=g_ProxyAddress) as response:
+                if response.status == 200:
+                    result = await response.json()
+                    if pInputMint in result["data"]:
+                        print(result["data"][pInputMint]["price"])
+asyncio.run(main())

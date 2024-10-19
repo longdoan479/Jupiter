@@ -63,10 +63,16 @@ async def main():
     l_FileProxy = FileProcessing("proxy.xlsx")
     Cons.g_Data_Proxy = l_FileProxy.ReadDataProxyJSON()
 
-    l_FileKey = FileProcessing("key.xlsx")
+    l_FileKey1 = FileProcessing("key/key1.xlsx")
+    l_FileKey2 = FileProcessing("key/key2.xlsx")
+    l_FileKey3 = FileProcessing("key/key3.xlsx")
+    l_FileKey4 = FileProcessing("key/key4.xlsx")
 
     l_lstAccount = []
-    l_lstAccount.extend(l_FileKey.ReadDataWallet())
+    l_lstAccount.extend(l_FileKey1.ReadDataWallet())
+    l_lstAccount.extend(l_FileKey2.ReadDataWallet())
+    l_lstAccount.extend(l_FileKey3.ReadDataWallet())
+    l_lstAccount.extend(l_FileKey4.ReadDataWallet())
 
     l_MaxGroup = max(l_lstAccount, key=lambda obj: obj.mGroup).mGroup
 
@@ -85,7 +91,7 @@ async def main():
         random.shuffle(l_lstAccountFilter)
         groups_Account[group].extend(l_lstAccountFilter)
 
-    l_randomThreadNumber = random.randint(1, 1)
+    l_randomThreadNumber = random.randint(25, 50)
 
     # Chia các nhóm thành 5 mảng
     l_Results = [[] for _ in range(l_randomThreadNumber)]

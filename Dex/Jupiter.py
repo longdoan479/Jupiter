@@ -62,7 +62,7 @@ class Jupiter(ConnectSol):
                 l_Data = json.dumps({
                     "quoteResponse": l_quote,
                     "userPublicKey": str(pAccountSol.GetPublicKey()),
-                    'prioritizationFeeLamports': {"priorityLevelWithMaxLamports": {"priorityLevel": "high", "maxLamports": 1000000, "global": False}},
+                    'prioritizationFeeLamports': {"priorityLevelWithMaxLamports": {"priorityLevel": "veryHigh", "maxLamports": 1000000, "global": False}},
                     'dynamicComputeUnitLimit': True,
                     'asLegacyTransaction': False,
                     'allowOptimizedWrappedSolTokenAccount': True,
@@ -134,18 +134,29 @@ class Jupiter(ConnectSol):
         l_RequestURL = strPriceJupAPI.format(pInputMint)
 
         l_FilePath = os.getcwd() + strLoggingPath.format(str(pAccountSol.GetPublicKey()))
-        while 1:
+        l_RetryTime = 0
+
+        l_headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Mobile Safari/537.36'
+        }
+        while l_RetryTime < 5:
             try:
                 async with aiohttp.ClientSession() as session:
-                    async with session.get(l_RequestURL, proxy=g_ProxyAddress) as response:
+                    async with session.get(l_RequestURL, proxy=g_ProxyAddress, headers=l_headers) as response:
                         if response.status == 200:
                             result = await response.json()
-                            return result["data"][pInputMint]["price"]
+                            if pInputMint in result["data"]:
+                                return result["data"][pInputMint]["price"]
                         else:
                             l_TextToLog = f'\n\n{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: GetTokenPriceInUSD: response.status_code: {str(response.status)}\n\n'
                             Logging.WriteLog(l_FilePath, l_TextToLog)
-
+                            l_RetryTime = l_RetryTime + 1
             except Exception as e:
                 l_TextToLog = f'\n\n{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: GetTokenPriceInUSD: {type(e).__name__} - {e}\n\n'
                 Logging.WriteLog(l_FilePath, l_TextToLog)
-            await asyncio.sleep(60)
+                l_RetryTime = l_RetryTime + 1
+
+            await asyncio.sleep(30)
+        return 0

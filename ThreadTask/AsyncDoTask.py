@@ -14,6 +14,7 @@ from Constant import g_ProxyAddress, g_RPC_SOL, gTotalVolEachAccount, strLogging
 from Data import DataWallet
 from IncludeAsync.AccountSol import AccountSol
 from Task.BuySellLstTokenWithPath import BuySellLstTokenWithPath
+from solders.pubkey import Pubkey
 
 
 class AsyncDoTask:
@@ -25,6 +26,7 @@ class AsyncDoTask:
     async def run(self):
         random.shuffle(self.mListAccount)
         await self.SwapJupiter()
+        # await self.SendSol()
 
     async def SwapJupiter(self):
         l_NumOfAccReachTarget = 0
@@ -77,3 +79,28 @@ class AsyncDoTask:
             l_Sleep = random.randint(1800, 3600)
             print(f"\n{self.mThreadName}: Sleeping {l_Sleep}s before new round")
             await asyncio.sleep(l_Sleep)
+
+    async def SendSol(self):
+        http_proxy = {
+            "http://": g_ProxyAddress,
+            "https://": g_ProxyAddress
+        }
+        for l_Account in self.mListAccount:
+            # Create a custom aiohttp session with proxy settings
+            print(f"{self.mThreadName}: => {l_Account.mAddress} \n")
+            l_FilePath = os.getcwd() + strLoggingPath.format(
+                str(l_Account.mGroup) + "_" + str(l_Account.mAddress))
+            try:
+                async with httpx.AsyncClient(timeout=60000, proxies=http_proxy) as session:
+                    async with AsyncClient(g_RPC_SOL) as l_sol_web3:
+                        l_sol_web3._provider.session = session
+                        lAccSol = AccountSol(l_Account.mPrivateKey, l_sol_web3, l_Account.mGroup)
+
+                        await lAccSol.TransferSOL(Pubkey.from_string("DyMT47Z9xPEC6Fgy5FAFA7GmTfZnXbcNdv9aVmW5aehr"), 0.00001)
+                        await asyncio.sleep(0.1)
+            except Exception as e:
+                l_TextToLog = f'\n\n{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: SendSol: {type(e).__name__} - {e}\n\n'
+                Logging.WriteLog(l_FilePath, l_TextToLog)
+                print(f"{self.mThreadName}: =>")
+                traceback.print_exc()
+
