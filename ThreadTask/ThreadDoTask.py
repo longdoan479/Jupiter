@@ -7,8 +7,9 @@ from typing import List
 from solana.rpc.api import Client
 from solana.rpc.async_api import AsyncClient
 
+from Helper import GetRandomRPC
 from Include.AccountSol import AccountSol
-from Constant import g_RPC_SOL, gRandomTimeMax, gRandomTimeMin, strLoggingPath, gTotalVolEachAccount
+from Constant import gRandomTimeMax, gRandomTimeMin, strLoggingPath, gTotalVolEachAccount
 from Data import DataWallet
 from Logging import Logging
 from Task.BuySellLstToken import BuySellLstToken
@@ -26,7 +27,9 @@ class ThreadDoTask(threading.Thread):
         l_NumOfAccReachTarget = 0
         while l_NumOfAccReachTarget < len(self.mListAccount): # if tổng số acc đạt target < len(self.mListAccount) => chạy tiếp
             for l_Account in self.mListAccount:
-                l_sol_web3 = Client(g_RPC_SOL)
+                l_RandomRPC = GetRandomRPC()
+
+                l_sol_web3 = Client(l_RandomRPC)
                 lAccSol = AccountSol(l_Account.mPrivateKey, l_sol_web3, l_Account.mGroup)
                 l_BalanceSol = lAccSol.GetBalanceSOL(True)
                 if str(lAccSol.GetPublicKey()) not in self.mDictAccVol:

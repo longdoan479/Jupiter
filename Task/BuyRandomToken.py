@@ -5,8 +5,9 @@ import random
 from solana.rpc.api import Client
 
 from Dex.Jupiter import Jupiter
+from Helper import GetRandomRPC
 from Include.AccountSol import AccountSol
-from Constant import TokenAltContract, g_RPC_SOL, TokenContract, strLoggingPath
+from Constant import TokenAltContract, TokenContract, strLoggingPath
 from Logging import Logging
 
 
@@ -16,8 +17,10 @@ class BuyRandomToken:
         self.mAmountIn = pAmountIn
 
     def DoTask(self, pInputMint: str = None):
+        l_RandomRPC = GetRandomRPC()
+
         # -------------- Connect to solana ---------------
-        l_Client = Client(g_RPC_SOL)
+        l_Client = Client(l_RandomRPC)
         l_TokenRandom = self.GetListTokenToDoTask()
         # --------------- Swap ---------------------------
         l_Jupiter = Jupiter(l_Client)

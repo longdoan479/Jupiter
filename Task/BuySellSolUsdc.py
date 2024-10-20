@@ -6,8 +6,9 @@ from datetime import datetime
 from solana.rpc.api import Client
 from solders.pubkey import Pubkey
 
+from Helper import GetRandomRPC
 from Include.AccountSol import AccountSol
-from Constant import g_RPC_SOL, TokenContract, strLoggingPath, gRandomTimeMax, gRandomTimeMin
+from Constant import TokenContract, strLoggingPath, gRandomTimeMax, gRandomTimeMin
 from Dex.Jupiter import Jupiter
 from Logging import Logging
 from Include.Token import Token
@@ -21,7 +22,8 @@ class BuySellSolUsdc:
         self.TotalDecision = 1
     def DoTask(self):
         # -------------- Connect to solana ---------------
-        l_Client = Client(g_RPC_SOL)
+        l_RandomRPC = GetRandomRPC()
+        l_Client = Client(l_RandomRPC)
 
         # ------------------------ Buy meme ---------------------
         self.MakeDecisionBuyMeme(TokenContract.SOL, self.mAmountIn)

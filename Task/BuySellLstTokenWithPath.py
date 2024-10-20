@@ -48,14 +48,12 @@ class BuySellLstTokenWithPath(ConnectSol):
             else:
                 l_SwapLST, l_result = await l_Jupiter.swap(l_CurrentToken, l_NextToken, l_Balance, self.mAccountSOL)
 
-            await asyncio.sleep(l_Timesleep)
-
-            if l_result is True:
+            if l_result is True and l_SwapLST is not None:
                 # --------------- Logging ---------------------------
                 l_TotalVolumne += await Jupiter.GetTokenPriceInUSD(l_CurrentToken, self.mAccountSOL) * l_Balance
 
                 l_FilePath = os.getcwd() + strLoggingPath.format(str(self.mAccountSOL.GetPublicKey()))
-                l_TextToLog = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Swap TokenLST to TokenLST on Jupiter \n => {l_SwapLST}'
+                l_TextToLog = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Swap TokenLST to TokenLST on Jupiter \n => {l_SwapLST.value}'
                 Logging.WriteLog(l_FilePath, l_TextToLog)
                 # ------------------------------------------
             else:

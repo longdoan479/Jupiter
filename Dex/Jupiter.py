@@ -47,7 +47,7 @@ class Jupiter(ConnectSol):
             l_TextToLog = f'\n\n{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Exception Swap Function: {type(e).__name__} - {e}\n\n'
             Logging.WriteLog(l_FilePath, l_TextToLog)
 
-        return str(txHash.value), l_result
+        return txHash, l_result
 
     async def GetDataSwap(self, pInputMint: str, pOutputMint: str, pAmountOriginal: float, pAccountSol: AccountSol):
 

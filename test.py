@@ -6,7 +6,7 @@ from solana.rpc.api import Client
 
 # Chuỗi ký tự cần tạo QR code
 from Include.AccountSol import AccountSol
-from Constant import g_RPC_SOL, strPriceJupAPI, g_ProxyAddress
+from Constant import strPriceJupAPI, g_ProxyAddress
 from FileProcessing import FileProcessing
 
 async def main():

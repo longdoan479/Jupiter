@@ -7,10 +7,12 @@ from datetime import datetime
 from typing import List
 
 import httpx
+
+from Helper import GetRandomRPC
 from Logging import Logging
 from solana.rpc.async_api import AsyncClient
 
-from Constant import g_ProxyAddress, g_RPC_SOL, gTotalVolEachAccount, strLoggingPath
+from Constant import g_ProxyAddress, gTotalVolEachAccount, strLoggingPath
 from Data import DataWallet
 from IncludeAsync.AccountSol import AccountSol
 from Task.BuySellLstTokenWithPath import BuySellLstTokenWithPath
@@ -36,13 +38,15 @@ class AsyncDoTask:
         }
         while l_NumOfAccReachTarget < len(self.mListAccount):  # if tổng số acc đạt target < len(self.mListAccount) => chạy tiếp
             for l_Account in self.mListAccount:
+                l_RandomRPC = GetRandomRPC()
+
                 # Create a custom aiohttp session with proxy settings
 
                 l_FilePath = os.getcwd() + strLoggingPath.format(
                     str(l_Account.mGroup) + "_" + str(l_Account.mAddress))
                 try:
                     async with httpx.AsyncClient(timeout=60000, proxies=http_proxy) as session:
-                        async with AsyncClient(g_RPC_SOL) as l_sol_web3:
+                        async with AsyncClient(l_RandomRPC) as l_sol_web3:
                             l_sol_web3._provider.session = session
                             lAccSol = AccountSol(l_Account.mPrivateKey, l_sol_web3, l_Account.mGroup)
                             l_BalanceSol = await lAccSol.GetBalanceSOL(True)
@@ -86,13 +90,15 @@ class AsyncDoTask:
             "https://": g_ProxyAddress
         }
         for l_Account in self.mListAccount:
+            l_RandomRPC = GetRandomRPC()
+
             # Create a custom aiohttp session with proxy settings
             print(f"{self.mThreadName}: => {l_Account.mAddress} \n")
             l_FilePath = os.getcwd() + strLoggingPath.format(
                 str(l_Account.mGroup) + "_" + str(l_Account.mAddress))
             try:
                 async with httpx.AsyncClient(timeout=60000, proxies=http_proxy) as session:
-                    async with AsyncClient(g_RPC_SOL) as l_sol_web3:
+                    async with AsyncClient(l_RandomRPC) as l_sol_web3:
                         l_sol_web3._provider.session = session
                         lAccSol = AccountSol(l_Account.mPrivateKey, l_sol_web3, l_Account.mGroup)
 
