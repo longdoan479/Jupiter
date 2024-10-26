@@ -12,7 +12,7 @@ from Helper import GetRandomRPC
 from Logging import Logging
 from solana.rpc.async_api import AsyncClient
 
-from Constant import g_ProxyAddress, gTotalVolEachAccount, strLoggingPath
+from Constant import gRandomTimeMax, gRandomTimeMin, g_ProxyAddress, gTotalVolEachAccount, strLoggingPath
 from Data import DataWallet
 from IncludeAsync.AccountSol import AccountSol
 from Task.BuySellLstTokenWithPath import BuySellLstTokenWithPath
@@ -49,7 +49,6 @@ class AsyncDoTask:
                         async with AsyncClient(l_RandomRPC) as l_sol_web3:
                             l_sol_web3._provider.session = session
                             lAccSol = AccountSol(l_Account.mPrivateKey, l_sol_web3, l_Account.mGroup)
-                            l_BalanceSol = await lAccSol.GetBalanceSOL(True)
                             if str(lAccSol.GetPublicKey()) not in self.mDictAccVol:
                                 self.mDictAccVol[str(lAccSol.GetPublicKey())] = 0
                             else:
@@ -59,7 +58,7 @@ class AsyncDoTask:
 
                             print(f"\n{self.mThreadName}: Account {l_Account.mAddress} is running")
 
-                            l_Task = BuySellLstTokenWithPath(l_sol_web3, lAccSol, round(l_BalanceSol/1.05, 3))
+                            l_Task = BuySellLstTokenWithPath(l_sol_web3, lAccSol)
                             l_TotalVolumn = await l_Task.DoTask()
 
                             self.mDictAccVol[str(lAccSol.GetPublicKey())] += l_TotalVolumn
@@ -80,7 +79,7 @@ class AsyncDoTask:
                     traceback.print_exc()
 
             random.shuffle(self.mListAccount)
-            l_Sleep = random.randint(1800, 3600)
+            l_Sleep = random.randint(gRandomTimeMin, gRandomTimeMax)
             print(f"\n{self.mThreadName}: Sleeping {l_Sleep}s before new round")
             await asyncio.sleep(l_Sleep)
 

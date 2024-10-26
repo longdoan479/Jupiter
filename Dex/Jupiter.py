@@ -34,13 +34,13 @@ class Jupiter(ConnectSol):
 
             signature = pAccountFrom.GetkeyPairAccount().sign_message(to_bytes_versioned(raw_tx.message))
             signed_tx = solders.transaction.VersionedTransaction.populate(raw_tx.message, [signature])
-            txHash = await self.mClient.send_raw_transaction(bytes(signed_tx), opts=TxOpts(skip_preflight=True, max_retries=10))
+            txHash = await self.mClient.send_raw_transaction(bytes(signed_tx))
             lstSig = [txHash.value]
 
             await asyncio.sleep(30)
 
             l_Transaction = Transactions(self.mClient)
-            l_result = await l_Transaction.WaitForTransaction(lstSig, 600, 10)
+            l_result = await l_Transaction.WaitForTransaction(lstSig, 200, 10)
 
         except Exception as e:
             l_FilePath = os.getcwd() + strLoggingPath.format(str(pAccountFrom.GetPublicKey()))
@@ -62,7 +62,7 @@ class Jupiter(ConnectSol):
                 l_Data = json.dumps({
                     "quoteResponse": l_quote,
                     "userPublicKey": str(pAccountSol.GetPublicKey()),
-                    'prioritizationFeeLamports': {"priorityLevelWithMaxLamports": {"priorityLevel": "veryHigh", "maxLamports": 1000000, "global": False}},
+                    'prioritizationFeeLamports': {"priorityLevelWithMaxLamports": {"priorityLevel": "medium", "maxLamports": 1000000, "global": False}},
                     'dynamicComputeUnitLimit': True,
                     'asLegacyTransaction': False,
                     'allowOptimizedWrappedSolTokenAccount': True,

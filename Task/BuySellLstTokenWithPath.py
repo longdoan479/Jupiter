@@ -15,10 +15,9 @@ from IncludeAsync.Token import Token
 
 
 class BuySellLstTokenWithPath(ConnectSol):
-    def __init__(self, pClient: AsyncClient, pAccountSOL: AccountSol, pAmountIn: float):
+    def __init__(self, pClient: AsyncClient, pAccountSOL: AccountSol):
         super().__init__(pClient)
         self.mAccountSOL = pAccountSOL
-        self.mAmountIn = pAmountIn
         self.TotalDecision = 1
 
     async def DoTask(self) -> float:
@@ -44,7 +43,7 @@ class BuySellLstTokenWithPath(ConnectSol):
             l_Timesleep = random.randint(gRandomTimeMin, gRandomTimeMax)
 
             if l_CurrentToken == TokenContract.SOL:
-                l_SwapLST, l_result = await l_Jupiter.swap(l_CurrentToken, l_NextToken, round(l_Balance/1.05, 3), self.mAccountSOL)
+                l_SwapLST, l_result = await l_Jupiter.swap(l_CurrentToken, l_NextToken, round(l_Balance/1.1, 3), self.mAccountSOL)
             else:
                 l_SwapLST, l_result = await l_Jupiter.swap(l_CurrentToken, l_NextToken, l_Balance, self.mAccountSOL)
 
