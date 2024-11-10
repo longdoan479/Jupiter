@@ -67,6 +67,9 @@ class BuySellLstTokenWithPath(ConnectSol):
     def GetListTokenToDoTask(self, pStartToken):
         l_lstToken = TokenLSTContract.getListToken()
         l_lstToken.append(TokenContract.SOL)
+        l_lstToken.append(TokenContract.SOL)
+        l_lstToken.append(TokenContract.SOL)
+        l_lstToken.append(TokenContract.SOL)
 
         l_lstToken = [l_Contract for l_Contract in l_lstToken if l_Contract != pStartToken]
         random.shuffle(l_lstToken)
