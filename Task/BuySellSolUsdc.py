@@ -9,7 +9,7 @@ from solders.pubkey import Pubkey
 from Helper import GetRandomRPC
 from Include.AccountSol import AccountSol
 from Constant import TokenContract, strLoggingPath, gRandomTimeMax, gRandomTimeMin
-from Dex.Jupiter import Jupiter
+from IncludeAsync.Dex.Jupiter import Jupiter
 from Logging import Logging
 from Include.Token import Token
 from Task.BuyRandomToken import BuyRandomToken

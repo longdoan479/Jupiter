@@ -4,7 +4,7 @@ import random
 
 from solana.rpc.api import Client
 
-from Dex.Jupiter import Jupiter
+from IncludeAsync.Dex.Jupiter import Jupiter
 from Helper import GetRandomRPC
 from Include.AccountSol import AccountSol
 from Constant import TokenAltContract, TokenContract, strLoggingPath

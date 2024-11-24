@@ -8,7 +8,7 @@ from solders.pubkey import Pubkey
 
 from IncludeAsync.AccountSol import AccountSol
 from Constant import TokenContract, strLoggingPath, gRandomTimeMax, gRandomTimeMin, TokenLSTContract
-from Dex.Jupiter import Jupiter
+from IncludeAsync.Dex.Jupiter import Jupiter
 from IncludeAsync.ConnectSol import ConnectSol
 from Logging import Logging
 from IncludeAsync.Token import Token
@@ -38,7 +38,7 @@ class BuySellLstTokenWithPath(ConnectSol):
             l_Balance = await l_LstToken.getBalanceTokenByOwner(self.mAccountSOL.GetPublicKey())
 
         l_CurrentToken = l_StartToken
-        l_NextToken = l_ListTokenLSTRandom[0]
+        l_NextToken = random.choice(l_ListTokenLSTRandom)
         if l_Balance > 0:
             l_Timesleep = random.randint(gRandomTimeMin, gRandomTimeMax)
 
@@ -66,6 +66,8 @@ class BuySellLstTokenWithPath(ConnectSol):
 
     def GetListTokenToDoTask(self, pStartToken):
         l_lstToken = TokenLSTContract.getListToken()
+        l_lstToken.append(TokenContract.SOL)
+        l_lstToken.append(TokenContract.SOL)
         l_lstToken.append(TokenContract.SOL)
         l_lstToken.append(TokenContract.SOL)
         l_lstToken.append(TokenContract.SOL)
