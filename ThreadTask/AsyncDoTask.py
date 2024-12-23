@@ -12,9 +12,11 @@ from Helper import GetRandomRPC
 from Logging import Logging
 from solana.rpc.async_api import AsyncClient
 
-from Constant import gRandomTimeMax, gRandomTimeMin, g_ProxyAddress, gTotalVolEachAccount, strLoggingPath
+from Constant import gRandomTimeMax, gRandomTimeMin, g_ProxyAddress, gTotalVolEachAccount, strLoggingPath, \
+    EnumStatusTask
 from Data import DataWallet
 from IncludeAsync.AccountSol import AccountSol
+from Task.BuySellLSTTokenToKeepActive import BuySellLstTokenToKeepActive
 from Task.BuySellLstTokenWithPath import BuySellLstTokenWithPath
 from solders.pubkey import Pubkey
 
@@ -27,8 +29,9 @@ class AsyncDoTask:
 
     async def run(self):
         random.shuffle(self.mListAccount)
-        await self.SwapJupiter()
+        # await self.SwapJupiter()
         # await self.SendSol()
+        await self.SwapJupiterToKeepActiveWallet()
 
     async def SwapJupiter(self):
         l_NumOfAccReachTarget = 0
@@ -74,6 +77,70 @@ class AsyncDoTask:
                             # ===========================================
                 except Exception as e:
                     l_TextToLog = f'\n\n{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: SwapJupiter: {type(e).__name__} - {e}\n\n'
+                    Logging.WriteLog(l_FilePath, l_TextToLog)
+                    print(f"{self.mThreadName}: =>")
+                    traceback.print_exc()
+
+            random.shuffle(self.mListAccount)
+            l_Sleep = random.randint(gRandomTimeMin, gRandomTimeMax)
+            print(f"\n{self.mThreadName}: Sleeping {l_Sleep}s before new round")
+            await asyncio.sleep(l_Sleep)
+    async def SwapJupiterToKeepActiveWallet(self):
+        l_NumOfAccReachTarget = 0
+        http_proxy = {
+            "http://": g_ProxyAddress,
+            "https://": g_ProxyAddress
+        }
+        while l_NumOfAccReachTarget < len(self.mListAccount):  # if tổng số acc đạt target < len(self.mListAccount) => chạy tiếp
+            for l_Account in self.mListAccount:
+                l_RandomRPC = GetRandomRPC()
+
+                # Create a custom aiohttp session with proxy settings
+
+                l_FilePath = os.getcwd() + strLoggingPath.format(
+                    str(l_Account.mGroup) + "_" + str(l_Account.mAddress))
+                try:
+                    async with httpx.AsyncClient(timeout=60000, proxies=http_proxy) as session:
+                        async with AsyncClient(l_RandomRPC) as l_sol_web3:
+                            l_sol_web3._provider.session = session
+                            lAccSol = AccountSol(l_Account.mPrivateKey, l_sol_web3, l_Account.mGroup)
+                            if str(lAccSol.GetPublicKey()) not in self.mDictAccVol:
+                                self.mDictAccVol[str(lAccSol.GetPublicKey())] = {}
+                                self.mDictAccVol[str(lAccSol.GetPublicKey())]["TargetTxnNumber"] = random.randint(1, 3)
+                                self.mDictAccVol[str(lAccSol.GetPublicKey())]["CurrTxnNumber"] = 0
+                            else:
+                                # if Total txn hiện tại đã vượt mức, chạy ví tiếp theo
+                                if self.mDictAccVol[str(lAccSol.GetPublicKey())]["CurrTxnNumber"] > \
+                                    self.mDictAccVol[str(lAccSol.GetPublicKey())]["TargetTxnNumber"]:
+                                    continue
+
+                            print(f"\n{self.mThreadName}: Account {l_Account.mAddress} is running")
+
+                            l_Task = BuySellLstTokenToKeepActive(l_sol_web3, lAccSol)
+                            l_Result = await l_Task.DoTask()
+
+                            if l_Result == EnumStatusTask.OUT_OF_BALANCE:
+                                l_NumOfAccReachTarget += 1
+
+                                l_TextToLog = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: ' \
+                                              f'Account {lAccSol.GetPublicKey()} - Out of balance'
+                                Logging.WriteLog(l_FilePath, l_TextToLog)
+                            elif l_Result is None:
+                                continue
+                            elif l_Result > 0:
+                                self.mDictAccVol[str(lAccSol.GetPublicKey())]["CurrTxnNumber"] += 1
+                                if self.mDictAccVol[str(lAccSol.GetPublicKey())]["CurrTxnNumber"] > \
+                                        self.mDictAccVol[str(lAccSol.GetPublicKey())]["TargetTxnNumber"]:
+                                    l_NumOfAccReachTarget += 1
+
+                            # ================== Logging =========================
+                            l_TextToLog = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: ' \
+                                          f'Total Txn {lAccSol.GetPublicKey()}: ' \
+                                          f'{self.mDictAccVol[str(lAccSol.GetPublicKey())]["CurrTxnNumber"]} txn'
+                            Logging.WriteLog(l_FilePath, l_TextToLog)
+                            # ===========================================
+                except Exception as e:
+                    l_TextToLog = f'\n\n{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: SwapJupiterToKeepActiveWallet: {type(e).__name__} - {e}\n\n'
                     Logging.WriteLog(l_FilePath, l_TextToLog)
                     print(f"{self.mThreadName}: =>")
                     traceback.print_exc()
