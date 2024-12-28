@@ -87,8 +87,7 @@ class BuySellLstTokenWithPath(ConnectSol):
         return l_lstToken[0:l_RandomNumOfLST]
 
     async def GetStartToken(self):
-        l_FilePath = os.getcwd() + strLoggingPath.format(
-            str(self.mAccountSOL.mGroup) + "_" + str(self.mAccountSOL.GetPublicKey()))
+        l_FilePath = os.getcwd() + strLoggingPath.format(str(self.mAccountSOL.GetPublicKey()))
         try:
             l_lstToken = TokenLSTContract.getListToken()
             l_lstToken.append(TokenContract.SOL)

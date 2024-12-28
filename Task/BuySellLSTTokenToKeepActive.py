@@ -88,8 +88,7 @@ class BuySellLstTokenToKeepActive(ConnectSol):
         return l_lstToken[0:l_RandomNumOfLST]
 
     async def GetStartToken(self):
-        l_FilePath = os.getcwd() + strLoggingPath.format(
-            str(self.mAccountSOL.mGroup) + "_" + str(self.mAccountSOL.GetPublicKey()))
+        l_FilePath = os.getcwd() + strLoggingPath.format(str(self.mAccountSOL.GetPublicKey()))
         try:
             l_lstToken = TokenLSTContract.getListToken()
             l_lstToken.append(TokenContract.SOL)
@@ -98,7 +97,7 @@ class BuySellLstTokenToKeepActive(ConnectSol):
                 if l_Token == TokenContract.SOL:
                     l_Balance = await self.mAccountSOL.GetBalanceSOL(True)
                 else:
-                    l_LstToken = Token(self.mClient, Pubkey.from_string(l_Token))
+                    l_LstToken = Token(self.mClient, l_Token)
                     l_Balance = await l_LstToken.getBalanceTokenByOwner(self.mAccountSOL.GetPublicKey())
                 await asyncio.sleep(0.5)
                 l_DictTokenBalance[l_Token] = l_Balance
