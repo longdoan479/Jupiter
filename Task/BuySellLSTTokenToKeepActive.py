@@ -37,7 +37,7 @@ class BuySellLstTokenToKeepActive(ConnectSol):
         if l_StartToken == TokenContract.SOL:
             l_Balance = await self.mAccountSOL.GetBalanceSOL(True)
         else:
-            l_LstToken = Token(self.mClient, Pubkey.from_string(l_StartToken))
+            l_LstToken = Token(self.mClient, l_StartToken)
             l_Balance = await l_LstToken.getBalanceTokenByOwner(self.mAccountSOL.GetPublicKey())
 
         l_CurrentToken = l_StartToken

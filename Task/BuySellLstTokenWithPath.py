@@ -34,7 +34,7 @@ class BuySellLstTokenWithPath(ConnectSol):
         if l_StartToken == TokenContract.SOL:
             l_Balance = await self.mAccountSOL.GetBalanceSOL(True)
         else:
-            l_LstToken = Token(self.mClient, Pubkey.from_string(l_StartToken))
+            l_LstToken = Token(self.mClient, l_StartToken)
             l_Balance = await l_LstToken.getBalanceTokenByOwner(self.mAccountSOL.GetPublicKey())
 
         l_CurrentToken = l_StartToken
@@ -43,7 +43,8 @@ class BuySellLstTokenWithPath(ConnectSol):
             l_Timesleep = random.randint(gRandomTimeMin, gRandomTimeMax)
 
             if l_CurrentToken == TokenContract.SOL:
-                l_SwapLST, l_result = await l_Jupiter.swap(l_CurrentToken, l_NextToken, round(l_Balance/1.1, 3), self.mAccountSOL)
+                # l_SwapLST, l_result = await l_Jupiter.swap(l_CurrentToken, l_NextToken, round(l_Balance/1.1, 3), self.mAccountSOL)
+                l_SwapLST, l_result = await l_Jupiter.swap(l_CurrentToken, l_NextToken, round(0.5, 3), self.mAccountSOL)
             else:
                 l_SwapLST, l_result = await l_Jupiter.swap(l_CurrentToken, l_NextToken, l_Balance, self.mAccountSOL)
 
@@ -52,7 +53,7 @@ class BuySellLstTokenWithPath(ConnectSol):
                 l_TotalVolumne += await Jupiter.GetTokenPriceInUSD(l_CurrentToken, self.mAccountSOL) * l_Balance
 
                 l_FilePath = os.getcwd() + strLoggingPath.format(str(self.mAccountSOL.GetPublicKey()))
-                l_TextToLog = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Swap TokenLST to TokenLST on Jupiter \n => {l_SwapLST.value}'
+                l_TextToLog = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Swap TokenLST to TokenLST on Jupiter \n => {l_SwapLST}'
                 Logging.WriteLog(l_FilePath, l_TextToLog)
                 # ------------------------------------------
             else:
@@ -66,6 +67,7 @@ class BuySellLstTokenWithPath(ConnectSol):
 
     def GetListTokenToDoTask(self, pStartToken):
         l_lstToken = TokenLSTContract.getListToken()
+        l_lstToken = []
         l_lstToken.append(TokenContract.SOL)
         l_lstToken.append(TokenContract.SOL)
         l_lstToken.append(TokenContract.SOL)
@@ -96,7 +98,7 @@ class BuySellLstTokenWithPath(ConnectSol):
                 if l_Token == TokenContract.SOL:
                     l_Balance = await self.mAccountSOL.GetBalanceSOL(True)
                 else:
-                    l_LstToken = Token(self.mClient, Pubkey.from_string(l_Token))
+                    l_LstToken = Token(self.mClient, l_Token)
                     l_Balance = await l_LstToken.getBalanceTokenByOwner(self.mAccountSOL.GetPublicKey())
                 await asyncio.sleep(0.5)
                 l_DictTokenBalance[l_Token] = l_Balance
